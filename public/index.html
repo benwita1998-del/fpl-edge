@@ -15,9 +15,7 @@
   color:#f4f6fb
 }
 
-*{
-  box-sizing:border-box
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
@@ -108,8 +106,7 @@ table{
   border-collapse:collapse
 }
 
-th,
-td{
+th,td{
   text-align:left;
   padding:9px;
   border-bottom:1px solid #27324a;
@@ -145,11 +142,6 @@ td{
   border-bottom:1px solid #27324a
 }
 
-.hero{
-  font-size:20px;
-  font-weight:800
-}
-
 .footer{
   margin:20px 0;
   color:#75809a;
@@ -169,11 +161,6 @@ td{
 
   .wrap{
     padding:12px
-  }
-
-  th,
-  td{
-    font-size:12px
   }
 }
 
@@ -197,7 +184,9 @@ td{
 
     <div>
       <div class="logo">⚽ FPL Edge</div>
-      <div class="muted" id="sub">Loading your team…</div>
+      <div class="muted" id="sub">
+        Loading your team…
+      </div>
     </div>
 
     <button class="btn" onclick="loadAll()">
@@ -205,6 +194,7 @@ td{
     </button>
 
   </div>
+
 
   <div class="tabs">
 
@@ -230,7 +220,9 @@ td{
 
   </div>
 
+
   <div id="app"></div>
+
 
   <div class="footer">
     FPL Edge uses official FPL public data.
@@ -242,15 +234,9 @@ td{
 
 <script>
 
-/*
-=========================================================
-FPL EDGE
-LIVE DATA SOURCE
-=========================================================
-
-IMPORTANT:
-The repository name is fpl--edge with TWO hyphens.
-*/
+/* =====================================================
+   FPL EDGE
+   ===================================================== */
 
 const CACHE_URL =
   'https://raw.githubusercontent.com/benwita1998-del/fpl--edge/refs/heads/fpl-cache/data/live.json';
@@ -258,12 +244,6 @@ const CACHE_URL =
 
 let D = null;
 
-
-/*
-=========================================================
-HELPERS
-=========================================================
-*/
 
 const $ = selector =>
   document.querySelector(selector);
@@ -280,77 +260,161 @@ const esc = value =>
     .replaceAll('>','&gt;');
 
 
-/*
-=========================================================
-NORMALISE FPL DATA
-=========================================================
-*/
+/* =====================================================
+   ARRAY SAFETY
+   ===================================================== */
+
+function asArray(value){
+
+  if(Array.isArray(value)){
+    return value;
+  }
+
+  if(value && Array.isArray(value.picks)){
+    return value.picks;
+  }
+
+  if(value && Array.isArray(value.current)){
+    return value.current;
+  }
+
+  if(value && Array.isArray(value.results)){
+    return value.results;
+  }
+
+  return [];
+
+}
+
+
+/* =====================================================
+   NORMALISE FPL DATA
+   ===================================================== */
 
 function normalise(j){
 
   const b =
     j.bootstrap ||
-    j ||
     {};
+
 
   const entry =
     j.entry ||
     {};
 
-  const history =
-    j.history ||
-    [];
 
-  const transfers =
-    j.transfers ||
-    [];
+  /*
+   PICKS CAN BE:
 
-  const picks =
-    j.picks ||
-    j.current_picks ||
-    [];
+   j.picks = [...]
+   
+   OR
 
-  const fixtures =
-    j.fixtures ||
-    b.fixtures ||
-    [];
+   j.picks = {
+      picks: [...]
+   }
+  */
+
+  let picks = [];
+
+  if(Array.isArray(j.picks)){
+    picks = j.picks;
+  }
+  else if(
+    j.picks &&
+    Array.isArray(j.picks.picks)
+  ){
+    picks = j.picks.picks;
+  }
 
 
   /*
-  -------------------------------------------------------
-  TEAMS
-  -------------------------------------------------------
+   HISTORY CAN BE:
+
+   [...]
+   
+   OR
+
+   {
+      current: [...]
+   }
+  */
+
+  let history = [];
+
+  if(Array.isArray(j.history)){
+    history = j.history;
+  }
+  else if(
+    j.history &&
+    Array.isArray(j.history.current)
+  ){
+    history = j.history.current;
+  }
+
+
+  /*
+   TRANSFERS
+  */
+
+  let transfers = [];
+
+  if(Array.isArray(j.transfers)){
+    transfers = j.transfers;
+  }
+  else if(
+    j.transfers &&
+    Array.isArray(j.transfers.results)
+  ){
+    transfers = j.transfers.results;
+  }
+
+
+  /*
+   FIXTURES
+  */
+
+  const fixtures =
+    Array.isArray(j.fixtures)
+      ? j.fixtures
+      : Array.isArray(b.fixtures)
+        ? b.fixtures
+        : [];
+
+
+  /*
+   TEAMS
   */
 
   const teams = {};
 
-  (b.teams || []).forEach(team => {
-    teams[team.id] = team;
-  });
+  (Array.isArray(b.teams) ? b.teams : [])
+    .forEach(team => {
+      teams[team.id] = team;
+    });
 
 
   /*
-  -------------------------------------------------------
-  PLAYERS
-  -------------------------------------------------------
+   PLAYERS
   */
 
   const players = {};
 
-  (b.elements || []).forEach(player => {
-    players[player.id] = player;
-  });
+  (Array.isArray(b.elements) ? b.elements : [])
+    .forEach(player => {
+      players[player.id] = player;
+    });
 
 
   /*
-  -------------------------------------------------------
-  GAMEWEEK
-  -------------------------------------------------------
+   EVENTS / GAMEWEEK
   */
 
   const events =
-    b.events ||
-    [];
+    Array.isArray(b.events)
+      ? b.events
+      : [];
+
 
   let gw =
     j.gameweek ||
@@ -361,9 +425,7 @@ function normalise(j){
 
 
   /*
-  -------------------------------------------------------
-  FIXTURE FUNCTION
-  -------------------------------------------------------
+   FIXTURE LOOKUP
   */
 
   const fixtureFor = (
@@ -371,8 +433,14 @@ function normalise(j){
     number = 5
   ) => {
 
+    if(!teamId){
+      return [];
+    }
+
+
     const upcoming =
       fixtures
+
         .filter(f => {
 
           const correctTeam =
@@ -385,18 +453,24 @@ function normalise(j){
           return correctTeam && future;
 
         })
+
         .sort(
           (a,b) =>
             Number(a.event) -
             Number(b.event)
         )
-        .slice(0,number);
+
+        .slice(
+          0,
+          number
+        );
 
 
     return upcoming.map(f => {
 
       const home =
         f.team_h === teamId;
+
 
       const opponent =
         teams[
@@ -431,9 +505,7 @@ function normalise(j){
 
 
   /*
-  -------------------------------------------------------
-  CURRENT SQUAD
-  -------------------------------------------------------
+   CURRENT SQUAD
   */
 
   const squad =
@@ -446,6 +518,7 @@ function normalise(j){
 
       let position =
         'FWD';
+
 
       if(x.position === 1){
         position = 'GK';
@@ -478,9 +551,7 @@ function normalise(j){
 
 
   /*
-  -------------------------------------------------------
-  ALL PLAYERS
-  -------------------------------------------------------
+   ALL PLAYERS
   */
 
   const allPlayers =
@@ -489,8 +560,7 @@ function normalise(j){
 
         return {
 
-          id:
-            p.id,
+          id:p.id,
 
           name:
             p.web_name,
@@ -537,68 +607,59 @@ function normalise(j){
 
 
   /*
-  -------------------------------------------------------
-  CHIP DATA
-  -------------------------------------------------------
+   CHIP INFORMATION
+
+   We will later connect this to
+   actual chip history.
   */
 
   const chips = [
 
     {
       label:'Wildcard',
-      half:1,
-      used:null
+      half:1
     },
 
     {
       label:'Free Hit',
-      half:1,
-      used:null
+      half:1
     },
 
     {
       label:'Bench Boost',
-      half:1,
-      used:null
+      half:1
     },
 
     {
       label:'Triple Captain',
-      half:1,
-      used:null
+      half:1
     },
 
     {
       label:'Wildcard',
-      half:2,
-      used:null
+      half:2
     },
 
     {
       label:'Free Hit',
-      half:2,
-      used:null
+      half:2
     },
 
     {
       label:'Bench Boost',
-      half:2,
-      used:null
+      half:2
     },
 
     {
       label:'Triple Captain',
-      half:2,
-      used:null
+      half:2
     }
 
   ];
 
 
   /*
-  -------------------------------------------------------
-  RETURN NORMALISED DATA
-  -------------------------------------------------------
+   RETURN NORMALISED DATA
   */
 
   return {
@@ -667,11 +728,9 @@ function normalise(j){
 }
 
 
-/*
-=========================================================
-LOAD LIVE FPL DATA
-=========================================================
-*/
+/* =====================================================
+   LOAD LIVE DATA
+   ===================================================== */
 
 async function loadAll(){
 
@@ -679,24 +738,16 @@ async function loadAll(){
     'Syncing official FPL data…';
 
 
-  $('#app').innerHTML =
-    `
-      <div class="card">
-        <div class="muted">
-          Loading live FPL snapshot…
-        </div>
+  $('#app').innerHTML = `
+    <div class="card">
+      <div class="muted">
+        Loading live FPL snapshot…
       </div>
-    `;
+    </div>
+  `;
 
 
   try{
-
-    /*
-    -------------------------------------------------------
-    IMPORTANT:
-    Check HTTP status BEFORE trying to parse JSON.
-    -------------------------------------------------------
-    */
 
     const response =
       await fetch(
@@ -733,8 +784,8 @@ async function loadAll(){
 
     render('home');
 
-
   }
+
   catch(error){
 
     console.error(
@@ -743,25 +794,24 @@ async function loadAll(){
     );
 
 
-    $('#app').innerHTML =
-      `
-        <div class="card error">
+    $('#app').innerHTML = `
+      <div class="card error">
 
-          <b>
-            Unable to load FPL data
-          </b>
+        <b>
+          Unable to load FPL data
+        </b>
 
-          <p>
-            ${esc(error.message)}
-          </p>
+        <p>
+          ${esc(error.message)}
+        </p>
 
-          <p class="muted">
-            The app is connected directly to
-            the GitHub FPL cache.
-          </p>
+        <p class="muted">
+          The app is connected directly
+          to the GitHub FPL cache.
+        </p>
 
-        </div>
-      `;
+      </div>
+    `;
 
 
     $('#sub').textContent =
@@ -772,11 +822,9 @@ async function loadAll(){
 }
 
 
-/*
-=========================================================
-FIXTURE DISPLAY
-=========================================================
-*/
+/* =====================================================
+   FIXTURE DISPLAY
+   ===================================================== */
 
 function fixture(f){
 
@@ -791,11 +839,9 @@ function fixture(f){
 }
 
 
-/*
-=========================================================
-MAIN STATISTICS
-=========================================================
-*/
+/* =====================================================
+   STATISTICS
+   ===================================================== */
 
 function stats(){
 
@@ -847,7 +893,6 @@ function stats(){
 
 
   return `
-
     <div class="grid">
 
       ${
@@ -869,17 +914,14 @@ function stats(){
       }
 
     </div>
-
   `;
 
 }
 
 
-/*
-=========================================================
-DASHBOARD
-=========================================================
-*/
+/* =====================================================
+   DASHBOARD
+   ===================================================== */
 
 function dashboard(){
 
@@ -908,7 +950,6 @@ function dashboard(){
 
 
         return `
-
           <tr>
 
             <td>
@@ -973,18 +1014,11 @@ function dashboard(){
             </td>
 
           </tr>
-
         `;
 
       })
       .join('');
 
-
-  /*
-  -------------------------------------------------------
-  NEWS
-  -------------------------------------------------------
-  */
 
   const news =
     D.squad
@@ -1048,33 +1082,13 @@ function dashboard(){
 
             <tr>
 
-              <th>
-                Player
-              </th>
-
-              <th>
-                Club
-              </th>
-
-              <th>
-                Price
-              </th>
-
-              <th>
-                Pts
-              </th>
-
-              <th>
-                Form
-              </th>
-
-              <th>
-                Status
-              </th>
-
-              <th>
-                Next 5
-              </th>
+              <th>Player</th>
+              <th>Club</th>
+              <th>Price</th>
+              <th>Pts</th>
+              <th>Form</th>
+              <th>Status</th>
+              <th>Next 5</th>
 
             </tr>
 
@@ -1088,10 +1102,14 @@ function dashboard(){
 
               `
                 <tr>
+
                   <td colspan="7">
-                    No current picks were found
-                    in the snapshot.
+
+                    No current picks were
+                    found in the snapshot.
+
                   </td>
+
                 </tr>
               `
             }
@@ -1131,11 +1149,9 @@ function dashboard(){
 }
 
 
-/*
-=========================================================
-FIXTURES PAGE
-=========================================================
-*/
+/* =====================================================
+   FIXTURES
+   ===================================================== */
 
 function fixtures(){
 
@@ -1171,29 +1187,12 @@ function fixtures(){
 
             <tr>
 
-              <th>
-                Player
-              </th>
-
-              <th>
-                Club
-              </th>
-
-              <th>
-                Price
-              </th>
-
-              <th>
-                Pts
-              </th>
-
-              <th>
-                Form
-              </th>
-
-              <th>
-                Next 5
-              </th>
+              <th>Player</th>
+              <th>Club</th>
+              <th>Price</th>
+              <th>Pts</th>
+              <th>Form</th>
+              <th>Next 5</th>
 
             </tr>
 
@@ -1212,15 +1211,11 @@ function fixtures(){
                   </td>
 
                   <td>
-                    ${esc(
-                      p.team_short
-                    )}
+                    ${esc(p.team_short)}
                   </td>
 
                   <td>
-                    ${money(
-                      p.price
-                    )}
+                    ${money(p.price)}
                   </td>
 
                   <td>
@@ -1230,9 +1225,7 @@ function fixtures(){
                   </td>
 
                   <td>
-                    ${esc(
-                      p.form
-                    )}
+                    ${esc(p.form)}
                   </td>
 
                   <td>
@@ -1261,11 +1254,9 @@ function fixtures(){
 }
 
 
-/*
-=========================================================
-PRICE ENGINE
-=========================================================
-*/
+/* =====================================================
+   PRICES
+   ===================================================== */
 
 function prices(){
 
@@ -1302,10 +1293,9 @@ function prices(){
         Price engine
       </div>
 
-
       <p>
-        Current FPL prices are read from
-        the official FPL snapshot.
+        Current FPL prices are read
+        from the official FPL snapshot.
       </p>
 
 
@@ -1349,19 +1339,9 @@ function prices(){
           <thead>
 
             <tr>
-
-              <th>
-                Player
-              </th>
-
-              <th>
-                Price
-              </th>
-
-              <th>
-                GW price change
-              </th>
-
+              <th>Player</th>
+              <th>Price</th>
+              <th>GW price change</th>
             </tr>
 
           </thead>
@@ -1372,53 +1352,55 @@ function prices(){
             ${
               movers.length
 
-                ? movers.map(p => `
+                ?
 
-                    <tr>
+                movers.map(p => `
 
-                      <td>
-                        ${esc(p.name)}
-                      </td>
+                  <tr>
 
-                      <td>
-                        ${money(p.price)}
-                      </td>
+                    <td>
+                      ${esc(p.name)}
+                    </td>
 
-                      <td
-                        class="${
-                          p.price_change > 0
-                            ? 'good'
-                            : 'bad'
-                        }"
-                      >
+                    <td>
+                      ${money(p.price)}
+                    </td>
 
-                        ${
-                          p.price_change > 0
-                            ? '+'
-                            : ''
-                        }
+                    <td
+                      class="${
+                        p.price_change > 0
+                          ? 'good'
+                          : 'bad'
+                      }"
+                    >
 
-                        ${
-                          p.price_change
-                            .toFixed(1)
-                        }m
+                      ${
+                        p.price_change > 0
+                          ? '+'
+                          : ''
+                      }
 
-                      </td>
+                      ${
+                        p.price_change
+                          .toFixed(1)
+                      }m
 
-                    </tr>
+                    </td>
 
-                  `).join('')
+                  </tr>
+
+                `).join('')
 
                 :
 
-                  `
-                    <tr>
-                      <td colspan="3">
-                        No price moves in
-                        the current snapshot.
-                      </td>
-                    </tr>
-                  `
+                `
+                  <tr>
+                    <td colspan="3">
+                      No price moves in
+                      the current snapshot.
+                    </td>
+                  </tr>
+                `
             }
 
           </tbody>
@@ -1434,11 +1416,9 @@ function prices(){
 }
 
 
-/*
-=========================================================
-HISTORY
-=========================================================
-*/
+/* =====================================================
+   HISTORY
+   ===================================================== */
 
 function history(){
 
@@ -1458,31 +1438,12 @@ function history(){
           <thead>
 
             <tr>
-
-              <th>
-                GW
-              </th>
-
-              <th>
-                Pts
-              </th>
-
-              <th>
-                Total
-              </th>
-
-              <th>
-                Rank
-              </th>
-
-              <th>
-                Transfers
-              </th>
-
-              <th>
-                Hit
-              </th>
-
+              <th>GW</th>
+              <th>Pts</th>
+              <th>Total</th>
+              <th>Rank</th>
+              <th>Transfers</th>
+              <th>Hit</th>
             </tr>
 
           </thead>
@@ -1519,11 +1480,11 @@ function history(){
                     </td>
 
                     <td>
-                      ${h.event_transfers}
+                      ${h.event_transfers || 0}
                     </td>
 
                     <td>
-                      ${h.event_transfers_cost}
+                      ${h.event_transfers_cost || 0}
                     </td>
 
                   </tr>
@@ -1554,11 +1515,9 @@ function history(){
 }
 
 
-/*
-=========================================================
-CHIPS
-=========================================================
-*/
+/* =====================================================
+   CHIPS
+   ===================================================== */
 
 function chips(){
 
@@ -1577,7 +1536,6 @@ function chips(){
               · half ${c.half}
 
             </div>
-
 
             <div class="big">
               AVAILABLE
@@ -1621,11 +1579,9 @@ function chips(){
 }
 
 
-/*
-=========================================================
-RENDER
-=========================================================
-*/
+/* =====================================================
+   RENDER
+   ===================================================== */
 
 async function render(
   tab = 'home'
@@ -1674,11 +1630,9 @@ async function render(
 }
 
 
-/*
-=========================================================
-TAB BUTTONS
-=========================================================
-*/
+/* =====================================================
+   TABS
+   ===================================================== */
 
 document
   .querySelectorAll(
@@ -1714,11 +1668,9 @@ document
   });
 
 
-/*
-=========================================================
-SERVICE WORKER
-=========================================================
-*/
+/* =====================================================
+   SERVICE WORKER
+   ===================================================== */
 
 if(
   'serviceWorker'
@@ -1727,7 +1679,7 @@ if(
 
   navigator.serviceWorker
     .register(
-      '/sw.js?v=6'
+      '/sw.js?v=7'
     )
     .catch(
       () => {}
@@ -1736,11 +1688,9 @@ if(
 }
 
 
-/*
-=========================================================
-START APP
-=========================================================
-*/
+/* =====================================================
+   START
+   ===================================================== */
 
 loadAll();
 
