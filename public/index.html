@@ -14,9 +14,23 @@
   background:#0b1020;
   color:#f4f6fb
 }
-*{box-sizing:border-box}
-body{margin:0}
-.wrap{max-width:1250px;margin:auto;padding:18px}
+
+*{
+  box-sizing:border-box
+}
+
+body{
+  margin:0;
+  background:#0b1020;
+  color:#f4f6fb
+}
+
+.wrap{
+  max-width:1250px;
+  margin:auto;
+  padding:18px
+}
+
 .top{
   display:flex;
   justify-content:space-between;
@@ -24,14 +38,16 @@ body{margin:0}
   gap:12px;
   flex-wrap:wrap
 }
-.logo{font-size:26px;font-weight:900}
-.muted{color:#9da7bc}
-.tabs{
-  display:flex;
-  gap:8px;
-  overflow:auto;
-  margin:18px 0
+
+.logo{
+  font-size:25px;
+  font-weight:900
 }
+
+.muted{
+  color:#9da7bc
+}
+
 .btn{
   border:1px solid #303a52;
   background:#151d31;
@@ -40,72 +56,135 @@ body{margin:0}
   padding:9px 12px;
   cursor:pointer
 }
-.btn.active{background:#fff;color:#101522}
+
+.btn.active{
+  background:#fff;
+  color:#101522
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  margin:18px 0
+}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:10px
 }
+
 .card{
   background:#121a2b;
   border:1px solid #27324a;
   border-radius:14px;
   padding:15px
 }
-.wide{grid-column:1/-1}
+
+.wide{
+  grid-column:1/-1
+}
+
 .label{
   font-size:12px;
   color:#8e9ab2;
   text-transform:uppercase;
   letter-spacing:.08em
 }
-.big{font-size:24px;font-weight:800;margin-top:5px}
-.scroll{overflow:auto}
-table{width:100%;border-collapse:collapse}
-th,td{
+
+.big{
+  font-size:24px;
+  font-weight:800;
+  margin-top:5px
+}
+
+.scroll{
+  overflow:auto
+}
+
+table{
+  width:100%;
+  border-collapse:collapse
+}
+
+th,
+td{
   text-align:left;
   padding:9px;
   border-bottom:1px solid #27324a;
   white-space:nowrap;
   font-size:13px
 }
+
 .pill{
   padding:3px 7px;
   border-radius:999px;
-  background:#24304a
+  background:#24304a;
+  display:inline-block;
+  margin:2px
 }
-.good{color:#7ee2a8}
-.bad{color:#ff8d9d}
-.warn{color:#ffd36e}
+
+.good{
+  color:#7ee2a8
+}
+
+.bad{
+  color:#ff8d9d
+}
+
+.warn{
+  color:#ffd36e
+}
+
 .row{
   display:flex;
   justify-content:space-between;
-  gap:12px;
+  gap:15px;
   padding:9px 0;
   border-bottom:1px solid #27324a
 }
-.hero{font-size:21px;font-weight:800}
+
+.hero{
+  font-size:20px;
+  font-weight:800
+}
+
 .footer{
   margin:20px 0;
   color:#75809a;
   font-size:12px
 }
+
 .error{
-  border:1px solid #6b3440;
-  background:#24141a
+  border:1px solid #7d3340;
+  background:#29151b;
+  color:#ffd7dd
 }
-.ok{
-  border:1px solid #285d46;
-  background:#12251d
-}
-.loading{
-  padding:30px;
-  text-align:center
-}
+
 @media(max-width:800px){
-  .grid{grid-template-columns:repeat(2,1fr)}
-  .wrap{padding:12px}
-  th,td{font-size:12px;padding:7px}
+  .grid{
+    grid-template-columns:repeat(2,1fr)
+  }
+
+  .wrap{
+    padding:12px
+  }
+
+  th,
+  td{
+    font-size:12px
+  }
+}
+
+@media(max-width:500px){
+  .grid{
+    grid-template-columns:1fr 1fr
+  }
+
+  .big{
+    font-size:20px
+  }
 }
 </style>
 </head>
@@ -115,410 +194,841 @@ th,td{
 <div class="wrap">
 
   <div class="top">
+
     <div>
       <div class="logo">⚽ FPL Edge</div>
       <div class="muted" id="sub">Loading your team…</div>
     </div>
 
-    <button class="btn" id="refresh">Refresh live data</button>
+    <button class="btn" onclick="loadAll()">
+      Refresh live data
+    </button>
+
   </div>
 
   <div class="tabs">
-    <button class="btn active" data-tab="home">Dashboard</button>
-    <button class="btn" data-tab="prices">Prices</button>
-    <button class="btn" data-tab="fixtures">Fixtures</button>
-    <button class="btn" data-tab="history">History</button>
+
+    <button class="btn active" data-tab="home">
+      Dashboard
+    </button>
+
+    <button class="btn" data-tab="fixtures">
+      Fixtures
+    </button>
+
+    <button class="btn" data-tab="prices">
+      Prices
+    </button>
+
+    <button class="btn" data-tab="history">
+      History
+    </button>
+
+    <button class="btn" data-tab="chips">
+      Chips
+    </button>
+
   </div>
 
-  <div id="app" class="loading">
-    Loading official FPL data…
-  </div>
+  <div id="app"></div>
 
   <div class="footer">
-    Official FPL public data. Predictions are model estimates, not guaranteed points.
+    FPL Edge uses official FPL public data.
+    Recommendations are model projections, not guaranteed points.
   </div>
 
 </div>
 
+
 <script>
 
-const TEAM_ID = 702959;
+/*
+=========================================================
+FPL EDGE
+LIVE DATA SOURCE
+=========================================================
+
+IMPORTANT:
+The repository name is fpl--edge with TWO hyphens.
+*/
 
 const CACHE_URL =
-  'https://raw.githubusercontent.com/benwita1998-del/fpl-edge/refs/heads/fpl-cache/data/live.json';
+  'https://raw.githubusercontent.com/benwita1998-del/fpl--edge/refs/heads/fpl-cache/data/live.json';
 
-const $ = s => document.querySelector(s);
-
-const esc = s =>
-  String(s ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;');
-
-const money = x =>
-  `£${Number(x || 0).toFixed(1)}m`;
 
 let D = null;
 
 
-/* =========================
-   LOAD DATA
-   ========================= */
+/*
+=========================================================
+HELPERS
+=========================================================
+*/
 
-async function load(){
-
-  $('#sub').textContent = 'Loading FPL Edge data…';
-
-  const url = CACHE_URL + '?t=' + Date.now();
-
-  const r = await fetch(url, {
-    cache: 'no-store'
-  });
-
-  if (!r.ok) {
-    throw new Error(`FPL cache returned HTTP ${r.status}`);
-  }
-
-  const text = await r.text();
-
-  let j;
-
-  try {
-    j = JSON.parse(text);
-  } catch(e) {
-    throw new Error('FPL cache returned invalid JSON');
-  }
-
-  if (!j || !j.bootstrap || !j.entry) {
-    throw new Error('FPL cache is missing required team data');
-  }
-
-  D = normalise(j);
-
-  $('#sub').textContent =
-    `${D.entry.name} · GW${D.gw} · ${D.entry.player_first_name} ${D.entry.player_last_name}`;
-
-  render('home');
-}
+const $ = selector =>
+  document.querySelector(selector);
 
 
-/* =========================
-   NORMALISE DATA
-   ========================= */
+const money = value =>
+  `£${(Number(value || 0) / 10).toFixed(1)}m`;
+
+
+const esc = value =>
+  String(value ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
+
+
+/*
+=========================================================
+NORMALISE FPL DATA
+=========================================================
+*/
 
 function normalise(j){
 
-  const b = j.bootstrap;
+  const b =
+    j.bootstrap ||
+    j ||
+    {};
 
-  const e = j.entry;
+  const entry =
+    j.entry ||
+    {};
 
-  const h = j.history || {};
+  const history =
+    j.history ||
+    [];
 
-  const t = j.transfers || [];
+  const transfers =
+    j.transfers ||
+    [];
 
-  const p = j.picks || {picks:[]};
+  const picks =
+    j.picks ||
+    j.current_picks ||
+    [];
 
-  let gw = j.gameweek;
-
-  if (!gw) {
-    const current =
-      b.events.find(x => x.is_current);
-
-    const next =
-      b.events.find(x => x.is_next);
-
-    const firstUnfinished =
-      b.events.find(x => !x.finished);
-
-    gw =
-      current?.id ||
-      next?.id ||
-      firstUnfinished?.id ||
-      1;
-  }
-
-  return build(b,e,h,t,p,gw);
-}
+  const fixtures =
+    j.fixtures ||
+    b.fixtures ||
+    [];
 
 
-/* =========================
-   BUILD TEAM DATA
-   ========================= */
+  /*
+  -------------------------------------------------------
+  TEAMS
+  -------------------------------------------------------
+  */
 
-function build(b,e,h,t,p,gw){
+  const teams = {};
 
-  const tm =
-    Object.fromEntries(
-      b.teams.map(x => [x.id,x])
-    );
-
-  const pm =
-    Object.fromEntries(
-      b.elements.map(x => [x.id,x])
-    );
-
-  const fs = b.fixtures || [];
+  (b.teams || []).forEach(team => {
+    teams[team.id] = team;
+  });
 
 
-  const next5 = x => {
+  /*
+  -------------------------------------------------------
+  PLAYERS
+  -------------------------------------------------------
+  */
 
-    if (!x) return [];
+  const players = {};
 
-    return fs
-      .filter(f =>
-        f.event != null &&
-        f.event >= gw &&
-        (
-          f.team_h === x.team ||
-          f.team_a === x.team
+  (b.elements || []).forEach(player => {
+    players[player.id] = player;
+  });
+
+
+  /*
+  -------------------------------------------------------
+  GAMEWEEK
+  -------------------------------------------------------
+  */
+
+  const events =
+    b.events ||
+    [];
+
+  let gw =
+    j.gameweek ||
+    entry.current_event ||
+    events.find(e => e.is_current)?.id ||
+    events.find(e => e.is_next)?.id ||
+    1;
+
+
+  /*
+  -------------------------------------------------------
+  FIXTURE FUNCTION
+  -------------------------------------------------------
+  */
+
+  const fixtureFor = (
+    teamId,
+    number = 5
+  ) => {
+
+    const upcoming =
+      fixtures
+        .filter(f => {
+
+          const correctTeam =
+            f.team_h === teamId ||
+            f.team_a === teamId;
+
+          const future =
+            Number(f.event) >= Number(gw);
+
+          return correctTeam && future;
+
+        })
+        .sort(
+          (a,b) =>
+            Number(a.event) -
+            Number(b.event)
         )
-      )
-      .sort((a,c) => a.event - c.event)
-      .slice(0,5)
-      .map(f => {
+        .slice(0,number);
 
-        const home =
-          f.team_h === x.team;
 
-        const opponent =
-          tm[home ? f.team_a : f.team_h];
+    return upcoming.map(f => {
 
-        return {
-          home,
-          opponent: opponent?.short_name || 'TBC',
-          fdr: home
+      const home =
+        f.team_h === teamId;
+
+      const opponent =
+        teams[
+          home
+            ? f.team_a
+            : f.team_h
+        ];
+
+
+      return {
+
+        home,
+
+        opponent:
+          opponent?.short_name ||
+          opponent?.name ||
+          '?',
+
+        fdr:
+          home
             ? f.team_h_difficulty
             : f.team_a_difficulty,
-          event: f.event,
-          kickoff: f.kickoff_time
+
+        event:
+          f.event
+
+      };
+
+    });
+
+  };
+
+
+  /*
+  -------------------------------------------------------
+  CURRENT SQUAD
+  -------------------------------------------------------
+  */
+
+  const squad =
+    picks.map(x => {
+
+      const p =
+        players[x.element] ||
+        {};
+
+
+      let position =
+        'FWD';
+
+      if(x.position === 1){
+        position = 'GK';
+      }
+      else if(x.position <= 5){
+        position = 'DEF';
+      }
+      else if(x.position <= 8){
+        position = 'MID';
+      }
+
+
+      return {
+
+        pick:x,
+
+        player:p,
+
+        position,
+
+        next5:
+          fixtureFor(
+            p.team,
+            5
+          )
+
+      };
+
+    });
+
+
+  /*
+  -------------------------------------------------------
+  ALL PLAYERS
+  -------------------------------------------------------
+  */
+
+  const allPlayers =
+    Object.values(players)
+      .map(p => {
+
+        return {
+
+          id:
+            p.id,
+
+          name:
+            p.web_name,
+
+          team_short:
+            teams[p.team]?.short_name ||
+            '?',
+
+          price:
+            p.now_cost ||
+            0,
+
+          total_points:
+            p.total_points ||
+            0,
+
+          form:
+            p.form ||
+            '0',
+
+          status:
+            p.status ||
+            '?',
+
+          news:
+            p.news ||
+            '',
+
+          next5:
+            fixtureFor(
+              p.team,
+              5
+            ),
+
+          price_change:
+            Number(
+              p.cost_change_event ||
+              0
+            ) / 10
+
         };
 
       });
 
-  };
+
+  /*
+  -------------------------------------------------------
+  CHIP DATA
+  -------------------------------------------------------
+  */
+
+  const chips = [
+
+    {
+      label:'Wildcard',
+      half:1,
+      used:null
+    },
+
+    {
+      label:'Free Hit',
+      half:1,
+      used:null
+    },
+
+    {
+      label:'Bench Boost',
+      half:1,
+      used:null
+    },
+
+    {
+      label:'Triple Captain',
+      half:1,
+      used:null
+    },
+
+    {
+      label:'Wildcard',
+      half:2,
+      used:null
+    },
+
+    {
+      label:'Free Hit',
+      half:2,
+      used:null
+    },
+
+    {
+      label:'Bench Boost',
+      half:2,
+      used:null
+    },
+
+    {
+      label:'Triple Captain',
+      half:2,
+      used:null
+    }
+
+  ];
 
 
-  const squad =
-    (p.picks || [])
-      .map(x => {
-
-        const player =
-          pm[x.element];
-
-        if (!player) return null;
-
-        return {
-          ...x,
-          player,
-          next5: next5(player)
-        };
-
-      })
-      .filter(Boolean);
-
-
-  const all =
-    b.elements.map(x => ({
-
-      ...x,
-
-      name: x.web_name,
-
-      team_short:
-        tm[x.team]?.short_name || '',
-
-      team_name:
-        tm[x.team]?.name || '',
-
-      price:
-        x.now_cost / 10,
-
-      next5:
-        next5(x),
-
-      price_change_event:
-        (x.cost_change_event || 0) / 10,
-
-      price_change_start:
-        (x.cost_change_start || 0) / 10
-
-    }));
-
+  /*
+  -------------------------------------------------------
+  RETURN NORMALISED DATA
+  -------------------------------------------------------
+  */
 
   return {
-    b,
-    entry:e,
-    history:h.current || [],
-    chips:h.chips || [],
-    transfers:t,
-    picks:p,
+
+    bootstrap:b,
+
+    entry,
+
+    history,
+
+    transfers,
+
+    picks,
+
     gw,
+
     squad,
-    all,
-    fixtures:fs
+
+    allPlayers,
+
+    teams,
+
+    fixtures,
+
+    chips,
+
+    rank:
+      entry.summary_overall_rank ||
+      0,
+
+    points:
+      entry.summary_event_points ||
+      0,
+
+    totalPoints:
+      entry.summary_overall_points ||
+      entry.summary_total_points ||
+      0,
+
+    value:
+      entry.value ||
+      0,
+
+    bank:
+      entry.bank ||
+      0,
+
+    freeTransfers:
+      entry.transfers ||
+      1,
+
+    manager:
+      [
+        entry.player_first_name,
+        entry.player_last_name
+      ]
+      .filter(Boolean)
+      .join(' '),
+
+    teamName:
+      entry.name ||
+      'FPL Team'
+
   };
 
 }
 
 
-/* =========================
-   STATS
-   ========================= */
+/*
+=========================================================
+LOAD LIVE FPL DATA
+=========================================================
+*/
 
-function stats(){
+async function loadAll(){
 
-  const gwHistory =
-    D.history.find(x => x.event === D.gw);
+  $('#sub').textContent =
+    'Syncing official FPL data…';
+
+
+  $('#app').innerHTML =
+    `
+      <div class="card">
+        <div class="muted">
+          Loading live FPL snapshot…
+        </div>
+      </div>
+    `;
+
+
+  try{
+
+    /*
+    -------------------------------------------------------
+    IMPORTANT:
+    Check HTTP status BEFORE trying to parse JSON.
+    -------------------------------------------------------
+    */
+
+    const response =
+      await fetch(
+        CACHE_URL +
+        '?t=' +
+        Date.now(),
+        {
+          cache:'no-store'
+        }
+      );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        'FPL cache returned HTTP ' +
+        response.status
+      );
+
+    }
+
+
+    const json =
+      await response.json();
+
+
+    D =
+      normalise(json);
+
+
+    $('#sub').textContent =
+      `${D.teamName} · GW${D.gw} · ${D.manager}`;
+
+
+    render('home');
+
+
+  }
+  catch(error){
+
+    console.error(
+      'FPL Edge data error:',
+      error
+    );
+
+
+    $('#app').innerHTML =
+      `
+        <div class="card error">
+
+          <b>
+            Unable to load FPL data
+          </b>
+
+          <p>
+            ${esc(error.message)}
+          </p>
+
+          <p class="muted">
+            The app is connected directly to
+            the GitHub FPL cache.
+          </p>
+
+        </div>
+      `;
+
+
+    $('#sub').textContent =
+      'FPL data connection failed';
+
+  }
+
+}
+
+
+/*
+=========================================================
+FIXTURE DISPLAY
+=========================================================
+*/
+
+function fixture(f){
 
   return `
-    <div class="grid">
-
-      <div class="card">
-        <div class="label">Rank</div>
-        <div class="big">
-          ${Number(
-            D.entry.summary_overall_rank || 0
-          ).toLocaleString()}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Points</div>
-        <div class="big">
-          ${D.entry.summary_overall_points || 0}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Team value</div>
-        <div class="big">
-          ${money(D.entry.last_deadline_value / 10)}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Bank</div>
-        <div class="big">
-          ${money(D.entry.last_deadline_bank / 10)}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Transfers this GW</div>
-        <div class="big">
-          ${gwHistory?.event_transfers || 0}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Squad</div>
-        <div class="big">
-          ${D.squad.length}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Chips used</div>
-        <div class="big">
-          ${D.chips.length}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">Gameweek</div>
-        <div class="big">
-          ${D.gw}
-        </div>
-      </div>
-
-    </div>
+    <span class="pill">
+      ${f.home ? 'H' : 'A'}
+      ${esc(f.opponent)}
+      · FDR ${f.fdr}
+    </span>
   `;
 
 }
 
 
-/* =========================
-   FIXTURE DISPLAY
-   ========================= */
+/*
+=========================================================
+MAIN STATISTICS
+=========================================================
+*/
 
-function fx(x){
+function stats(){
 
-  return (x.next5 || [])
-    .map(f => `
-      <span class="pill">
-        ${f.home ? 'H' : 'A'}
-        ${esc(f.opponent)}
-        · FDR ${f.fdr}
-      </span>
-    `)
-    .join(' ');
+  const cards = [
+
+    [
+      'Overall rank',
+      Number(
+        D.rank
+      ).toLocaleString()
+    ],
+
+    [
+      'GW points',
+      D.points
+    ],
+
+    [
+      'Overall points',
+      D.totalPoints
+    ],
+
+    [
+      'Team value',
+      money(D.value)
+    ],
+
+    [
+      'Bank',
+      money(D.bank)
+    ],
+
+    [
+      'Free transfers',
+      D.freeTransfers
+    ],
+
+    [
+      'Squad',
+      D.squad.length
+    ],
+
+    [
+      'Current GW',
+      D.gw
+    ]
+
+  ];
+
+
+  return `
+
+    <div class="grid">
+
+      ${
+        cards.map(x => `
+
+          <div class="card">
+
+            <div class="label">
+              ${x[0]}
+            </div>
+
+            <div class="big">
+              ${x[1]}
+            </div>
+
+          </div>
+
+        `).join('')
+      }
+
+    </div>
+
+  `;
 
 }
 
 
-/* =========================
-   DASHBOARD
-   ========================= */
+/*
+=========================================================
+DASHBOARD
+=========================================================
+*/
 
-function home(){
+function dashboard(){
 
   const rows =
     D.squad
+      .map(x => {
+
+        const p =
+          x.player;
+
+
+        const status =
+          p.status === 'a'
+
+            ? `<span class="good">
+                 Available
+               </span>`
+
+            : `<span class="warn">
+                 ${esc(
+                   p.news ||
+                   p.status ||
+                   'Unknown'
+                 )}
+               </span>`;
+
+
+        return `
+
+          <tr>
+
+            <td>
+
+              <b>
+                ${esc(
+                  p.web_name ||
+                  'Unknown'
+                )}
+              </b>
+
+              <br>
+
+              <span class="muted">
+                ${x.position}
+              </span>
+
+            </td>
+
+
+            <td>
+              ${esc(
+                D.teams[
+                  p.team
+                ]?.short_name ||
+                '?'
+              )}
+            </td>
+
+
+            <td>
+              ${money(
+                p.now_cost
+              )}
+            </td>
+
+
+            <td>
+              ${p.total_points || 0}
+            </td>
+
+
+            <td>
+              ${esc(
+                p.form ||
+                '0'
+              )}
+            </td>
+
+
+            <td>
+              ${status}
+            </td>
+
+
+            <td>
+              ${
+                x.next5
+                  .map(fixture)
+                  .join(' ')
+              }
+            </td>
+
+          </tr>
+
+        `;
+
+      })
+      .join('');
+
+
+  /*
+  -------------------------------------------------------
+  NEWS
+  -------------------------------------------------------
+  */
+
+  const news =
+    D.squad
+
+      .filter(x =>
+        (
+          x.player.status &&
+          x.player.status !== 'a'
+        )
+        ||
+        x.player.news
+      )
+
       .map(x => `
 
-        <tr>
+        <div class="row">
 
-          <td>
-            <b>${esc(x.player.web_name)}</b>
-            ${x.is_captain ? ' · C' : ''}
-            ${x.is_vice_captain ? ' · VC' : ''}
-          </td>
+          <span>
+            <b>
+              ${esc(
+                x.player.web_name
+              )}
+            </b>
+          </span>
 
-          <td>
-            ${
-              D.b.teams.find(
-                t => t.id === x.player.team
-              )?.short_name || ''
-            }
-          </td>
+          <span class="warn">
+            ${esc(
+              x.player.news ||
+              x.player.status ||
+              ''
+            )}
+          </span>
 
-          <td>
-            ${money(x.player.now_cost / 10)}
-          </td>
-
-          <td>
-            ${x.player.total_points}
-          </td>
-
-          <td>
-            ${x.player.form}
-          </td>
-
-          <td>
-            ${
-              x.player.status === 'a'
-              ? '<span class="good">Available</span>'
-              : '<span class="warn">' +
-                esc(
-                  x.player.news ||
-                  x.player.status
-                ) +
-                '</span>'
-            }
-          </td>
-
-          <td>
-            ${fx(x)}
-          </td>
-
-        </tr>
+        </div>
 
       `)
+
       .join('');
 
 
   return `
+
     ${stats()}
+
 
     <div
       class="card wide"
@@ -526,33 +1036,61 @@ function home(){
     >
 
       <div class="label">
-        Team ${TEAM_ID}
+        Current squad
       </div>
+
 
       <div class="scroll">
 
         <table>
 
           <thead>
+
             <tr>
-              <th>Player</th>
-              <th>Club</th>
-              <th>Price</th>
-              <th>Pts</th>
-              <th>Form</th>
-              <th>Status</th>
-              <th>Next 5</th>
+
+              <th>
+                Player
+              </th>
+
+              <th>
+                Club
+              </th>
+
+              <th>
+                Price
+              </th>
+
+              <th>
+                Pts
+              </th>
+
+              <th>
+                Form
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Next 5
+              </th>
+
             </tr>
+
           </thead>
+
 
           <tbody>
 
             ${
               rows ||
+
               `
                 <tr>
                   <td colspan="7">
-                    Picks are not currently available.
+                    No current picks were found
+                    in the snapshot.
                   </td>
                 </tr>
               `
@@ -565,102 +1103,26 @@ function home(){
       </div>
 
     </div>
-  `;
-
-}
 
 
-/* =========================
-   PRICES
-   ========================= */
-
-function prices(){
-
-  const players =
-    D.all
-      .filter(x =>
-        x.price_change_event ||
-        x.price_change_start
-      )
-      .sort(
-        (a,b) =>
-          Math.abs(b.price_change_event) -
-          Math.abs(a.price_change_event)
-      )
-      .slice(0,100);
-
-
-  return `
-
-    <div class="card">
+    <div
+      class="card wide"
+      style="margin-top:12px"
+    >
 
       <div class="label">
-        Official FPL price data
+        Team news
       </div>
 
-      <div class="scroll">
+      ${
+        news ||
 
-        <table>
-
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Price</th>
-              <th>GW move</th>
-              <th>Season move</th>
-              <th>Ownership</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            ${players.map(x => `
-
-              <tr>
-
-                <td>
-                  ${esc(x.name)}
-                </td>
-
-                <td>
-                  ${money(x.price)}
-                </td>
-
-                <td
-                  class="${
-                    x.price_change_event > 0
-                    ? 'good'
-                    : 'bad'
-                  }"
-                >
-                  ${
-                    x.price_change_event > 0
-                    ? '+'
-                    : ''
-                  }${x.price_change_event.toFixed(1)}m
-                </td>
-
-                <td>
-                  ${
-                    x.price_change_start > 0
-                    ? '+'
-                    : ''
-                  }${x.price_change_start.toFixed(1)}m
-                </td>
-
-                <td>
-                  ${x.selected_by_percent || 0}%
-                </td>
-
-              </tr>
-
-            `).join('')}
-
-          </tbody>
-
-        </table>
-
-      </div>
+        `
+          <div class="muted">
+            No flagged squad news.
+          </div>
+        `
+      }
 
     </div>
 
@@ -669,20 +1131,27 @@ function prices(){
 }
 
 
-/* =========================
-   FIXTURES
-   ========================= */
+/*
+=========================================================
+FIXTURES PAGE
+=========================================================
+*/
 
 function fixtures(){
 
   const players =
-    [...D.all]
+    [...D.allPlayers]
+
       .sort(
         (a,b) =>
           b.total_points -
           a.total_points
       )
-      .slice(0,60);
+
+      .slice(
+        0,
+        50
+      );
 
 
   return `
@@ -690,47 +1159,94 @@ function fixtures(){
     <div class="card">
 
       <div class="label">
-        Next five fixtures
+        Top 50 players by current points
       </div>
+
 
       <div class="scroll">
 
         <table>
 
           <thead>
+
             <tr>
-              <th>Player</th>
-              <th>Club</th>
-              <th>Price</th>
-              <th>Next 5</th>
+
+              <th>
+                Player
+              </th>
+
+              <th>
+                Club
+              </th>
+
+              <th>
+                Price
+              </th>
+
+              <th>
+                Pts
+              </th>
+
+              <th>
+                Form
+              </th>
+
+              <th>
+                Next 5
+              </th>
+
             </tr>
+
           </thead>
+
 
           <tbody>
 
-            ${players.map(x => `
+            ${
+              players.map(p => `
 
-              <tr>
+                <tr>
 
-                <td>
-                  ${esc(x.name)}
-                </td>
+                  <td>
+                    ${esc(p.name)}
+                  </td>
 
-                <td>
-                  ${x.team_short}
-                </td>
+                  <td>
+                    ${esc(
+                      p.team_short
+                    )}
+                  </td>
 
-                <td>
-                  ${money(x.price)}
-                </td>
+                  <td>
+                    ${money(
+                      p.price
+                    )}
+                  </td>
 
-                <td>
-                  ${fx(x)}
-                </td>
+                  <td>
+                    <b>
+                      ${p.total_points}
+                    </b>
+                  </td>
 
-              </tr>
+                  <td>
+                    ${esc(
+                      p.form
+                    )}
+                  </td>
 
-            `).join('')}
+                  <td>
+                    ${
+                      p.next5
+                        .map(fixture)
+                        .join(' ')
+                    }
+                  </td>
+
+                </tr>
+
+              `).join('')
+            }
 
           </tbody>
 
@@ -745,9 +1261,184 @@ function fixtures(){
 }
 
 
-/* =========================
-   HISTORY
-   ========================= */
+/*
+=========================================================
+PRICE ENGINE
+=========================================================
+*/
+
+function prices(){
+
+  const movers =
+    [...D.allPlayers]
+
+      .filter(
+        p =>
+          p.price_change !== 0
+      )
+
+      .sort(
+        (a,b) =>
+          Math.abs(
+            b.price_change
+          )
+          -
+          Math.abs(
+            a.price_change
+          )
+      )
+
+      .slice(
+        0,
+        40
+      );
+
+
+  return `
+
+    <div class="card">
+
+      <div class="label">
+        Price engine
+      </div>
+
+
+      <p>
+        Current FPL prices are read from
+        the official FPL snapshot.
+      </p>
+
+
+      <div class="row">
+
+        <span>
+          Price change time
+        </span>
+
+        <b>
+          00:00 UK
+        </b>
+
+      </div>
+
+
+      <div class="row">
+
+        <span>
+          Maximum daily move
+        </span>
+
+        <b>
+          £0.1m
+        </b>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="card"
+      style="margin-top:12px"
+    >
+
+      <div class="scroll">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Player
+              </th>
+
+              <th>
+                Price
+              </th>
+
+              <th>
+                GW price change
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            ${
+              movers.length
+
+                ? movers.map(p => `
+
+                    <tr>
+
+                      <td>
+                        ${esc(p.name)}
+                      </td>
+
+                      <td>
+                        ${money(p.price)}
+                      </td>
+
+                      <td
+                        class="${
+                          p.price_change > 0
+                            ? 'good'
+                            : 'bad'
+                        }"
+                      >
+
+                        ${
+                          p.price_change > 0
+                            ? '+'
+                            : ''
+                        }
+
+                        ${
+                          p.price_change
+                            .toFixed(1)
+                        }m
+
+                      </td>
+
+                    </tr>
+
+                  `).join('')
+
+                :
+
+                  `
+                    <tr>
+                      <td colspan="3">
+                        No price moves in
+                        the current snapshot.
+                      </td>
+                    </tr>
+                  `
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/*
+=========================================================
+HISTORY
+=========================================================
+*/
 
 function history(){
 
@@ -756,53 +1447,99 @@ function history(){
     <div class="card">
 
       <div class="label">
-        Season history
+        Season memory
       </div>
+
 
       <div class="scroll">
 
         <table>
 
           <thead>
+
             <tr>
-              <th>GW</th>
-              <th>Pts</th>
-              <th>Total</th>
-              <th>Rank</th>
-              <th>Transfers</th>
-              <th>Hit</th>
+
+              <th>
+                GW
+              </th>
+
+              <th>
+                Pts
+              </th>
+
+              <th>
+                Total
+              </th>
+
+              <th>
+                Rank
+              </th>
+
+              <th>
+                Transfers
+              </th>
+
+              <th>
+                Hit
+              </th>
+
             </tr>
+
           </thead>
+
 
           <tbody>
 
-            ${D.history.map(h => `
+            ${
+              D.history.length
 
-              <tr>
+                ?
 
-                <td>${h.event}</td>
+                D.history.map(h => `
 
-                <td>${h.points}</td>
+                  <tr>
 
-                <td>${h.total_points}</td>
+                    <td>
+                      ${h.event}
+                    </td>
 
-                <td>
-                  ${Number(
-                    h.overall_rank || 0
-                  ).toLocaleString()}
-                </td>
+                    <td>
+                      ${h.points}
+                    </td>
 
-                <td>
-                  ${h.event_transfers}
-                </td>
+                    <td>
+                      ${h.total_points}
+                    </td>
 
-                <td>
-                  ${h.event_transfers_cost}
-                </td>
+                    <td>
+                      ${Number(
+                        h.overall_rank ||
+                        0
+                      ).toLocaleString()}
+                    </td>
 
-              </tr>
+                    <td>
+                      ${h.event_transfers}
+                    </td>
 
-            `).join('')}
+                    <td>
+                      ${h.event_transfers_cost}
+                    </td>
+
+                  </tr>
+
+                `).join('')
+
+                :
+
+                `
+                  <tr>
+                    <td colspan="6">
+                      No history found.
+                    </td>
+                  </tr>
+                `
+            }
 
           </tbody>
 
@@ -817,104 +1554,195 @@ function history(){
 }
 
 
-/* =========================
-   TAB NAVIGATION
-   ========================= */
+/*
+=========================================================
+CHIPS
+=========================================================
+*/
 
-function render(tab){
+function chips(){
 
-  document
-    .querySelectorAll('[data-tab]')
-    .forEach(b =>
-      b.classList.toggle(
-        'active',
-        b.dataset.tab === tab
-      )
-    );
+  return `
+
+    <div class="grid">
+
+      ${
+        D.chips.map(c => `
+
+          <div class="card">
+
+            <div class="label">
+
+              ${c.label}
+              · half ${c.half}
+
+            </div>
 
 
-  $('#app').innerHTML =
-    tab === 'home'
-      ? home()
-      : tab === 'prices'
-      ? prices()
-      : tab === 'fixtures'
-      ? fixtures()
-      : history();
+            <div class="big">
+              AVAILABLE
+            </div>
+
+          </div>
+
+        `).join('')
+      }
+
+    </div>
+
+
+    <div
+      class="card"
+      style="margin-top:12px"
+    >
+
+      <b>
+        2026/27 chip rules
+      </b>
+
+
+      <p class="muted">
+
+        There are two sets of Wildcard,
+        Free Hit, Bench Boost and Triple
+        Captain.
+
+        The first set expires after GW19.
+
+        Only one chip can be used in a
+        Gameweek.
+
+      </p>
+
+    </div>
+
+  `;
 
 }
 
 
-/* =========================
-   BUTTONS
-   ========================= */
+/*
+=========================================================
+RENDER
+=========================================================
+*/
+
+async function render(
+  tab = 'home'
+){
+
+  if(!D){
+    return;
+  }
+
+
+  if(tab === 'home'){
+
+    $('#app').innerHTML =
+      dashboard();
+
+  }
+
+  else if(tab === 'fixtures'){
+
+    $('#app').innerHTML =
+      fixtures();
+
+  }
+
+  else if(tab === 'prices'){
+
+    $('#app').innerHTML =
+      prices();
+
+  }
+
+  else if(tab === 'history'){
+
+    $('#app').innerHTML =
+      history();
+
+  }
+
+  else if(tab === 'chips'){
+
+    $('#app').innerHTML =
+      chips();
+
+  }
+
+}
+
+
+/*
+=========================================================
+TAB BUTTONS
+=========================================================
+*/
 
 document
-  .querySelectorAll('[data-tab]')
-  .forEach(b =>
-    b.onclick = () =>
-      render(b.dataset.tab)
-  );
+  .querySelectorAll(
+    '.tabs .btn'
+  )
+  .forEach(button => {
+
+    button.onclick =
+      async () => {
+
+        document
+          .querySelectorAll(
+            '.tabs .btn'
+          )
+          .forEach(x =>
+            x.classList.remove(
+              'active'
+            )
+          );
 
 
-$('#refresh').onclick = () =>
-  load().catch(e => {
+        button.classList.add(
+          'active'
+        );
 
-    $('#app').innerHTML = `
-      <div class="card error">
 
-        <b>FPL data unavailable</b>
+        await render(
+          button.dataset.tab
+        );
 
-        <p>
-          ${esc(e.message)}
-        </p>
-
-      </div>
-    `;
+      };
 
   });
 
 
-/* =========================
-   START APP
-   ========================= */
+/*
+=========================================================
+SERVICE WORKER
+=========================================================
+*/
 
-load().catch(e => {
-
-  $('#sub').textContent =
-    'FPL connection error';
-
-  $('#app').innerHTML = `
-    <div class="card error">
-
-      <b>Unable to load FPL data</b>
-
-      <p>
-        ${esc(e.message)}
-      </p>
-
-      <p class="muted">
-        The app is online, but the FPL cache
-        could not be loaded.
-      </p>
-
-    </div>
-  `;
-
-});
-
-
-/* =========================
-   SERVICE WORKER
-   ========================= */
-
-if ('serviceWorker' in navigator) {
+if(
+  'serviceWorker'
+  in navigator
+){
 
   navigator.serviceWorker
-    .register('/sw.js?v=5')
-    .catch(() => {});
+    .register(
+      '/sw.js?v=6'
+    )
+    .catch(
+      () => {}
+    );
 
 }
+
+
+/*
+=========================================================
+START APP
+=========================================================
+*/
+
+loadAll();
 
 </script>
 
