@@ -1,0 +1,12 @@
+{
+  "name":"FPL Edge",
+  "short_name":"FPL Edge",
+  "start_url":"/",
+  "display":"standalone",
+  "background_color":"#0b1020",
+  "theme_color":"#0b1020",
+  "description":"Season-long Fantasy Premier League decision engine.",
+  "icons":[
+    {"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
